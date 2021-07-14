@@ -106,7 +106,7 @@ def search_in_html(files: List[str], search: str):
                 is_next = True
                 while is_next:
                     write_file(p_i.text + '\n')
-                    p_i = p_i.findNext('p')
+                    p_i = p_i.findNext(TAGS)
                     if p_i:
                         if re_simple.match(p_i.text):
                             is_next = False
@@ -130,7 +130,7 @@ def search_in_pdf(files: List[str], search: str):
                 is_next = True
                 while is_next:
                     write_file(p_i.text + '\n')
-                    p_i = p_i.findNext('span')
+                    p_i = p_i.findNext(TAGS)
                     if p_i:
                         if re_simple.match(p_i.text):
                             is_next = False
