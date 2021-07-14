@@ -15,7 +15,8 @@ from bs4 import BeautifulSoup
 HOME = str(Path.home())
 ASSETS = './assets'
 FILE: TextIOWrapper
-TAGS = ["p", "h1", "h2", "h3", "h4", "h5", "h6"]
+TAGS = ["span", "p", "h1", "h2", "h3", "h4", "h5", "h6"]
+TAG_FILE = None
 RE_SIMPLE = re.compile('^SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
 
 REPLACEMENTS = (
@@ -105,6 +106,7 @@ def search_files(path: str) -> List[List[str]]:
 def prepare_text(text: str) -> str:
     for a, b in REPLACEMENTS:
         text = text.replace(a, b).replace(a.upper(), b.upper())
+    text = text.replace('  ', ' ').replace('  ', ' ')
     return text
 
 
@@ -116,19 +118,22 @@ def plain_text(text: str) -> str:
 
 
 def search_in_html(files: List[str], search: str):
+    global TAG_FILE
     search = prepare_text(search.replace('(', '\(').replace(')', '\)'))
     re_search = re.compile(f'^SEÑOR[A]? {search}.-')
-    print('Procesando archivos html........', end="\r")
+    #print('Procesando archivos html........', end="\r")
     for file in files:
         with open(file, 'rb') as fp:
             soup = BeautifulSoup(fp, 'html.parser')
             parts = soup.find_all(lambda tag: tag.name in TAGS and re_search.match(prepare_text(tag.text)))
             for p in parts:
                 p_i = p
+                if not TAG_FILE:
+                    TAG_FILE = p.name
                 is_next = True
                 while is_next:
                     write_file(p_i.text + '\n')
-                    p_i = p_i.findNext(TAGS)
+                    p_i = p_i.findNext(TAG_FILE)
                     if p_i:
                         if RE_SIMPLE.match(p_i.text):
                             is_next = False
@@ -138,20 +143,24 @@ def search_in_html(files: List[str], search: str):
 
 
 def search_in_pdf(files: List[str], search: str):
+    global TAG_FILE
     search = prepare_text(search.replace('(', '\(').replace(')', '\)'))
     re_search = re.compile(f'^SEÑOR[A]? {search}.-')
-    print('Procesando archivos pdf........', end="\r")
+    #print('Procesando archivos pdf........', end="\r")
     for file in files:
+        TAG_FILE = None
         with open(file, 'rb') as fp:
             html = pdftohtml(fp)
             soup = BeautifulSoup(html, 'html.parser')
             parts = soup.find_all(lambda tag: tag.name in TAGS and re_search.match(prepare_text(tag.text)))
             for p in parts:
                 p_i = p
+                if not TAG_FILE:
+                    TAG_FILE = p.name
                 is_next = True
                 while is_next:
                     write_file(p_i.text + '\n')
-                    p_i = p_i.findNext(TAGS)
+                    p_i = p_i.findNext(TAG_FILE)
                     if p_i:
                         if RE_SIMPLE.match(p_i.text):
                             is_next = False
