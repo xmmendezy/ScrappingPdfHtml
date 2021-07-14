@@ -44,7 +44,7 @@ def main():
 
 
 def requirements():
-    os.system('poetry e xport -f requirements.txt > requirements.txt')
+    os.system('poetry export -f requirements.txt > requirements.txt')
 
 
 def parse_args() -> Dict[str, str]:
