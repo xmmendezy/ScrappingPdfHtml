@@ -15,7 +15,17 @@ from bs4 import BeautifulSoup
 HOME = str(Path.home())
 ASSETS = './assets'
 FILE: TextIOWrapper
-TAGS = ["p", "span", "h1", "h2", "h3", "h4", "h5", "h6", "font"]
+TAGS = ["p", "h1", "h2", "h3", "h4", "h5", "h6"]
+RE_SIMPLE = re.compile('^SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
+
+REPLACEMENTS = (
+    ("á", "a"),
+    ("é", "e"),
+    ("í", "i"),
+    ("ó", "o"),
+    ("ú", "u"),
+)
+
 
 def main():
     global FILE
@@ -92,15 +102,27 @@ def search_files(path: str) -> List[List[str]]:
     return [paths_html, paths_pdf]
 
 
+def prepare_text(text: str) -> str:
+    for a, b in REPLACEMENTS:
+        text = text.replace(a, b).replace(a.upper(), b.upper())
+    return text
+
+
+def plain_text(text: str) -> str:
+    return text.replace(
+        ' ', '').replace(
+        '\n', '').replace(
+        '\t', '')
+
+
 def search_in_html(files: List[str], search: str):
-    search = search.replace('(', '\(').replace(')', '\)')
+    search = prepare_text(search.replace('(', '\(').replace(')', '\)'))
     re_search = re.compile(f'^SEÑOR[A]? {search}.-')
-    re_simple = re.compile('^SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
     print('Procesando archivos html........', end="\r")
     for file in files:
         with open(file, 'rb') as fp:
             soup = BeautifulSoup(fp, 'html.parser')
-            parts = soup.find_all(lambda tag: tag.name in TAGS and re_search.match(tag.text))
+            parts = soup.find_all(lambda tag: tag.name in TAGS and re_search.match(prepare_text(tag.text)))
             for p in parts:
                 p_i = p
                 is_next = True
@@ -108,7 +130,7 @@ def search_in_html(files: List[str], search: str):
                     write_file(p_i.text + '\n')
                     p_i = p_i.findNext(TAGS)
                     if p_i:
-                        if re_simple.match(p_i.text):
+                        if RE_SIMPLE.match(p_i.text):
                             is_next = False
                     else:
                         is_next = False
@@ -116,15 +138,14 @@ def search_in_html(files: List[str], search: str):
 
 
 def search_in_pdf(files: List[str], search: str):
-    search = search.replace('(', '\(').replace(')', '\)')
+    search = prepare_text(search.replace('(', '\(').replace(')', '\)'))
     re_search = re.compile(f'^SEÑOR[A]? {search}.-')
-    re_simple = re.compile('^SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
     print('Procesando archivos pdf........', end="\r")
     for file in files:
         with open(file, 'rb') as fp:
             html = pdftohtml(fp)
             soup = BeautifulSoup(html, 'html.parser')
-            parts = soup.find_all(lambda tag: tag.name in TAGS and re_search.match(tag.text))
+            parts = soup.find_all(lambda tag: tag.name in TAGS and re_search.match(prepare_text(tag.text)))
             for p in parts:
                 p_i = p
                 is_next = True
@@ -132,7 +153,7 @@ def search_in_pdf(files: List[str], search: str):
                     write_file(p_i.text + '\n')
                     p_i = p_i.findNext(TAGS)
                     if p_i:
-                        if re_simple.match(p_i.text):
+                        if RE_SIMPLE.match(p_i.text):
                             is_next = False
                     else:
                         is_next = False
