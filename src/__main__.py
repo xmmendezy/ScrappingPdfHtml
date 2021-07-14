@@ -126,7 +126,7 @@ def search_in_pdf(files: List[str], search: str):
         with open(file, 'rb') as fp:
             html = pdftohtml(fp)
             soup = BeautifulSoup(html, 'html.parser')
-            parts = soup.find_all(lambda tag: tag.name == TAGS and re_search.match(tag.text))
+            parts = soup.find_all(lambda tag: tag.name in TAGS and re_search.match(tag.text))
             for p in parts:
                 p_i = p
                 is_next = True
