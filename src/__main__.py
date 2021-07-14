@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 HOME = str(Path.home())
 ASSETS = './assets'
 FILE: TextIOWrapper
-
+TAGS = ["p", "span", "h1", "h2", "h3", "h4", "h5", "h6", "font"]
 
 def main():
     global FILE
@@ -93,13 +93,15 @@ def search_files(path: str) -> List[List[str]]:
 
 
 def search_in_html(files: List[str], search: str):
+    search = search.replace('(', '\(')
+    search = search.replace(')', '\)')
     re_search = re.compile(f'^SEÑOR[A]? {search}.-')
     re_simple = re.compile('^SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
     print('Procesando archivos html........', end="\r")
     for file in files:
         with open(file, 'rb') as fp:
             soup = BeautifulSoup(fp, 'html.parser')
-            parts = soup.find_all(lambda tag: tag.name == "p" and re_search.match(tag.text))
+            parts = soup.find_all(lambda tag: tag.name in TAGS and re_search.match(tag.text))
             for p in parts:
                 p_i = p
                 is_next = True
@@ -115,6 +117,8 @@ def search_in_html(files: List[str], search: str):
 
 
 def search_in_pdf(files: List[str], search: str):
+    search = search.replace('(', '\(')
+    search = search.replace(')', '\)')
     re_search = re.compile(f'^SEÑOR[A]? {search}.-')
     re_simple = re.compile('^SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
     print('Procesando archivos pdf........', end="\r")
@@ -122,7 +126,7 @@ def search_in_pdf(files: List[str], search: str):
         with open(file, 'rb') as fp:
             html = pdftohtml(fp)
             soup = BeautifulSoup(html, 'html.parser')
-            parts = soup.find_all(lambda tag: tag.name == "span" and re_search.match(tag.text))
+            parts = soup.find_all(lambda tag: tag.name == TAGS and re_search.match(tag.text))
             for p in parts:
                 p_i = p
                 is_next = True
