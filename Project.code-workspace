@@ -1,0 +1,21 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "python.pythonPath": "./.venv",
+        "python.linting.pylintEnabled": true,
+        "python.linting.enabled": true,
+        "python.linting.mypyEnabled": true,
+        "python.formatting.provider": "autopep8",
+        "python.formatting.autopep8Args": [
+            "--max-line-length=250"
+        ],
+        "python.linting.pylintArgs": [
+            "--init-hook",
+            "import sys; sys.path.insert(0, './')"
+        ],
+    }
+}
