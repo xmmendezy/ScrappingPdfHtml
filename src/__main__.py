@@ -93,8 +93,7 @@ def search_files(path: str) -> List[List[str]]:
 
 
 def search_in_html(files: List[str], search: str):
-    search = search.replace('(', '\(')
-    search = search.replace(')', '\)')
+    search = search.replace('(', '\(').replace(')', '\)')
     re_search = re.compile(f'^SEÑOR[A]? {search}.-')
     re_simple = re.compile('^SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
     print('Procesando archivos html........', end="\r")
@@ -117,8 +116,7 @@ def search_in_html(files: List[str], search: str):
 
 
 def search_in_pdf(files: List[str], search: str):
-    search = search.replace('(', '\(')
-    search = search.replace(')', '\)')
+    search = search.replace('(', '\(').replace(')', '\)')
     re_search = re.compile(f'^SEÑOR[A]? {search}.-')
     re_simple = re.compile('^SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
     print('Procesando archivos pdf........', end="\r")
