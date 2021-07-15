@@ -118,7 +118,6 @@ def search_in_html(files: List[str], re_search: Pattern[str]):
 
 
 def search_in_pdf(files: List[str], re_search: Pattern[str]):
-
     print('Procesando archivos pdf........', end="\r")
     for file in files:
         with open(file, 'rb') as fp:
