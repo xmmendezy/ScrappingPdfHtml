@@ -8,6 +8,7 @@ __pycache__
 poetry.lock
 tmp
 assets
+output
 
 # local env files
 .directory

@@ -12,7 +12,7 @@ from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 from bs4 import BeautifulSoup
 
-HOME = str(Path.home())
+OUTPUT = './output'
 ASSETS = './assets'
 FILE: TextIOWrapper
 RE_SIMPLE = re.compile('SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
@@ -37,10 +37,12 @@ def main():
     re_search = re.compile(f'SEÑOR[A]? {search}.-')
     if not os.path.exists(ASSETS):
         os.makedirs(ASSETS)
+    if not os.path.exists(OUTPUT):
+        os.makedirs(OUTPUT)
     paths_html, paths_pdf = search_files(args['path'])
     if len(paths_html) + len(paths_pdf):
         output_file = f'{args["search"]}.txt'
-        FILE = open(os.path.join(HOME, output_file), 'w+')
+        FILE = open(os.path.join(OUTPUT, output_file), 'w+')
         FILE.truncate(0)
         FILE.write(f'******** {args["search"]} ************\n\n')
         FILE.write(f'******** HTML ************\n\n')
@@ -48,7 +50,7 @@ def main():
         FILE.write(f'******** PDF ************\n\n')
         search_in_pdf(paths_pdf, re_search)
         FILE.close()
-        print(f'Archivo de respuesta en {os.path.join(HOME,output_file)}')
+        print(f'Archivo de respuesta en {os.path.join(OUTPUT,output_file)}')
     else:
         print('Sin archivos')
         return
