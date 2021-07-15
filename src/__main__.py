@@ -5,7 +5,6 @@ import sys
 import re
 from io import StringIO, TextIOWrapper
 from typing import BinaryIO, List, Dict, Pattern, Set, Any
-from pathlib import Path
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import HTMLConverter
 from pdfminer.layout import LAParams
