@@ -4,7 +4,7 @@ import os
 import sys
 import re
 from io import StringIO, TextIOWrapper
-from typing import BinaryIO, List, Dict, Set
+from typing import BinaryIO, List, Dict, Pattern, Set, Any
 from pathlib import Path
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import HTMLConverter
@@ -15,9 +15,7 @@ from bs4 import BeautifulSoup
 HOME = str(Path.home())
 ASSETS = './assets'
 FILE: TextIOWrapper
-TAGS = ["span", "p", "h1", "h2", "h3", "h4", "h5", "h6"]
-TAG_FILE = None
-RE_SIMPLE = re.compile('^SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
+RE_SIMPLE = re.compile('SEÑOR[A]? [a-zA-Z\u00C0-\u017F\s()]+.-')
 
 REPLACEMENTS = (
     ("á", "a"),
@@ -110,64 +108,33 @@ def prepare_text(text: str) -> str:
     return text
 
 
-def plain_text(text: str) -> str:
-    return text.replace(
-        ' ', '').replace(
-        '\n', '').replace(
-        '\t', '')
-
-
 def search_in_html(files: List[str], search: str):
-    global TAG_FILE
     search = prepare_text(search.replace('(', '\(').replace(')', '\)'))
-    re_search = re.compile(f'^SEÑOR[A]? {search}.-')
-    #print('Procesando archivos html........', end="\r")
+    re_search = re.compile(f'SEÑOR[A]? {search}.-')
+    print('Procesando archivos html........', end="\r")
     for file in files:
         with open(file, 'rb') as fp:
-            soup = BeautifulSoup(fp, 'html.parser')
-            parts = soup.find_all(lambda tag: tag.name in TAGS and re_search.match(prepare_text(tag.text)))
-            for p in parts:
-                p_i = p
-                if not TAG_FILE:
-                    TAG_FILE = p.name
-                is_next = True
-                while is_next:
-                    write_file(p_i.text + '\n')
-                    p_i = p_i.findNext(TAG_FILE)
-                    if p_i:
-                        if RE_SIMPLE.match(p_i.text):
-                            is_next = False
-                    else:
-                        is_next = False
-                write_file('\n\n')
+            search_text(fp, re_search)
 
 
 def search_in_pdf(files: List[str], search: str):
-    global TAG_FILE
     search = prepare_text(search.replace('(', '\(').replace(')', '\)'))
     re_search = re.compile(f'^SEÑOR[A]? {search}.-')
-    #print('Procesando archivos pdf........', end="\r")
+    print('Procesando archivos pdf........', end="\r")
     for file in files:
-        TAG_FILE = None
         with open(file, 'rb') as fp:
             html = pdftohtml(fp)
-            soup = BeautifulSoup(html, 'html.parser')
-            parts = soup.find_all(lambda tag: tag.name in TAGS and re_search.match(prepare_text(tag.text)))
-            for p in parts:
-                p_i = p
-                if not TAG_FILE:
-                    TAG_FILE = p.name
-                is_next = True
-                while is_next:
-                    write_file(p_i.text + '\n')
-                    p_i = p_i.findNext(TAG_FILE)
-                    if p_i:
-                        if RE_SIMPLE.match(p_i.text):
-                            is_next = False
-                    else:
-                        is_next = False
-                write_file('\n\n')
+            search_text(html, re_search)
 
+
+def search_text(html: Any, re_search: Pattern[str]):
+    soup = BeautifulSoup(html, 'html.parser')
+    text = prepare_text(soup.get_text())
+    for i, j in [(m.start(0), m.end(0)) for m in re_search.finditer(text)]:
+        end = RE_SIMPLE.search(text[j:])
+        if end:
+            j = j + end.start(0)
+        write_file(text[i:j] + '\n')
 
 def pdftohtml(pdf: BinaryIO):
     rsrcmgr = PDFResourceManager()
