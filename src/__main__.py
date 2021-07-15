@@ -119,7 +119,7 @@ def search_in_html(files: List[str], search: str):
 
 def search_in_pdf(files: List[str], search: str):
     search = prepare_text(search.replace('(', '\(').replace(')', '\)'))
-    re_search = re.compile(f'^SEÑOR[A]? {search}.-')
+    re_search = re.compile(f'SEÑOR[A]? {search}.-')
     print('Procesando archivos pdf........', end="\r")
     for file in files:
         with open(file, 'rb') as fp:
