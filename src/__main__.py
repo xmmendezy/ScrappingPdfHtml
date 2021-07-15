@@ -33,6 +33,8 @@ def main():
         print('Sin busqueda establecida')
         return
     print('Buscando archivos...', end="\r")
+    search = prepare_text(args['search'].replace('(', '\(').replace(')', '\)'))
+    re_search = re.compile(f'SEÑOR[A]? {search}.-')
     if not os.path.exists(ASSETS):
         os.makedirs(ASSETS)
     paths_html, paths_pdf = search_files(args['path'])
@@ -42,9 +44,9 @@ def main():
         FILE.truncate(0)
         FILE.write(f'******** {args["search"]} ************\n\n')
         FILE.write(f'******** HTML ************\n\n')
-        search_in_html(paths_html, args['search'])
+        search_in_html(paths_html,re_search )
         FILE.write(f'******** PDF ************\n\n')
-        search_in_pdf(paths_pdf, args['search'])
+        search_in_pdf(paths_pdf, re_search)
         FILE.close()
         print(f'Archivo de respuesta en {os.path.join(HOME,output_file)}')
     else:
@@ -108,18 +110,15 @@ def prepare_text(text: str) -> str:
     return text
 
 
-def search_in_html(files: List[str], search: str):
-    search = prepare_text(search.replace('(', '\(').replace(')', '\)'))
-    re_search = re.compile(f'SEÑOR[A]? {search}.-')
+def search_in_html(files: List[str], re_search: Pattern[str]):
     print('Procesando archivos html........', end="\r")
     for file in files:
         with open(file, 'rb') as fp:
             search_text(fp, re_search)
 
 
-def search_in_pdf(files: List[str], search: str):
-    search = prepare_text(search.replace('(', '\(').replace(')', '\)'))
-    re_search = re.compile(f'SEÑOR[A]? {search}.-')
+def search_in_pdf(files: List[str], re_search: Pattern[str]):
+
     print('Procesando archivos pdf........', end="\r")
     for file in files:
         with open(file, 'rb') as fp:
@@ -129,9 +128,9 @@ def search_in_pdf(files: List[str], search: str):
 
 def search_text(html: Any, re_search: Pattern[str]):
     soup = BeautifulSoup(html, 'html.parser')
-    text = prepare_text(soup.get_text())
-    for i, j in [(m.start(0), m.end(0)) for m in re_search.finditer(text)]:
-        end = RE_SIMPLE.search(text[j:])
+    text = soup.get_text().replace('  ', ' ').replace('  ', ' ')
+    for i, j in [(m.start(0), m.end(0)) for m in re_search.finditer(prepare_text(text))]:
+        end = RE_SIMPLE.search(prepare_text(text[j:]))
         if end:
             j = j + end.start(0)
         write_file(text[i:j] + '\n')
